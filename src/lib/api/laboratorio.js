@@ -40,7 +40,11 @@ export const criarLaboratorio = async (laboratorioData) => {
     throw new Error(error || 'Falha ao criar laboratório');
   }
 
-  return res.json();
+  if (res.status === 204) {
+    return null; // ou return true;
+  }
+
+  return res.json(); // Caso o back retorne algo
 };
 
 export const atualizarLaboratorio = async (id, laboratorioData) => {
@@ -92,7 +96,11 @@ export const deletarLaboratorio = async (id) => {
     throw new Error(error || 'Falha ao deletar laboratório');
   }
 
-  return res.json();
+  if (res.status === 204) {
+    return null; // ou return true;
+  }
+
+  return res.json(); // Caso o back retorne algo
 };
 
 export const atualizarStatusManutencao = async (id, emManutencao) => {
@@ -111,5 +119,9 @@ export const atualizarStatusManutencao = async (id, emManutencao) => {
     throw new Error(error || 'Falha ao atualizar status de manutenção');
   }
 
-  return res.json();
+  if (res.status === 204) {
+    return null; // ou return true;
+  }
+
+  return res.json(); // Caso o back retorne algo
 };

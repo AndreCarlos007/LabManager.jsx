@@ -72,11 +72,6 @@ const items = [
     url: "/relatorio",
     icon: Info,
   },
-  {
-    title: "Backups",
-    url: "/backups",
-    icon: DatabaseBackup,
-  },
 ];
 
 // Função para formatar o nome da função

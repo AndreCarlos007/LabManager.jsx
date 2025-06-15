@@ -104,7 +104,6 @@ export default function LaboratoriosPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Tem certeza que deseja excluir este laboratório?')) return;
     
     try {
       await removerLaboratorio(id);

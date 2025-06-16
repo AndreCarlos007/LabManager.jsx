@@ -1,4 +1,3 @@
-// src/components/reservas/ReservaDetalhes.jsx
 import React from 'react';
 import { 
   Card, 
@@ -10,7 +9,7 @@ import {
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Calendar, Check, X, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const statusVariant = {
@@ -47,43 +46,50 @@ export default function ReservaDetalhes({
   };
 
   const renderApprovalFlow = () => {
-  const steps = [
-    { name: 'Coordenador do Laboratório', status: reserva.aprovacaoLaboratorio || 'Pendente' },
-    { name: 'Coordenador do Curso', status: reserva.aprovacaoCoordenacao || 'Pendente' },
-    { name: 'Pró-Reitoria', status: reserva.aprovacaoReitoria || 'Pendente' }
-  ];
+    const steps = [
+      { name: 'Coordenador do Laboratório', status: reserva.aprovacaoLaboratorio || 'Pendente' },
+      { name: 'Coordenador do Curso', status: reserva.aprovacaoCoordenacao || 'Pendente' },
+      { name: 'Pró-Reitoria', status: reserva.aprovacaoReitoria || 'Pendente' }
+    ];
 
-  return (
-    <div className="mt-6">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Fluxo de Aprovação</h3>
-      <div className="space-y-2">
-        {steps.map((step, index) => (
-          <div key={index} className="flex items-center">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 ${
-              step.status === 'Aprovada' ? 'bg-green-500' : 
-              step.status === 'Rejeitada' ? 'bg-red-500' : 
-              'bg-gray-300'
-            }`}>
-              {step.status === 'Aprovada' ? (
-                <Check className="h-4 w-4 text-white" />
-              ) : step.status === 'Rejeitada' ? (
-                <X className="h-4 w-4 text-white" />
-              ) : (
-                <Clock className="h-4 w-4 text-gray-600" />
-              )}
+    return (
+      <div className="mt-6">
+        <h3 className="text-sm font-medium text-gray-700 mb-3">Fluxo de Aprovação</h3>
+        <div className="space-y-2">
+          {steps.map((step, index) => (
+            <div key={index} className="flex items-center">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 ${
+                step.status === 'Aprovada' ? 'bg-green-500' : 
+                step.status === 'Rejeitada' ? 'bg-red-500' : 
+                'bg-gray-300'
+              }`}>
+                {step.status === 'Aprovada' ? (
+                  <Check className="h-4 w-4 text-white" />
+                ) : step.status === 'Rejeitada' ? (
+                  <X className="h-4 w-4 text-white" />
+                ) : (
+                  <Clock className="h-4 w-4 text-gray-600" />
+                )}
+              </div>
+              <span className="text-sm">{step.name}</span>
+              <div className="ml-auto">
+                <Badge variant={statusVariant[step.status] || 'outline'}>
+                  {step.status}
+                </Badge>
+              </div>
             </div>
-            <span className="text-sm">{step.name}</span>
-            <div className="ml-auto">
-              <Badge variant={statusVariant[step.status] || 'outline'}>
-                {step.status}
-              </Badge>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
+
+  // Função para formatar data/hora corretamente
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = parseISO(dateString);
+    return format(date, "dd/MM/yyyy HH:mm", { locale: ptBR });
+  };
 
   return (
     <Card className="border-gray-200 bg-gray-50 shadow-sm">
@@ -108,7 +114,6 @@ export default function ReservaDetalhes({
           
           <div>
             <h3 className="text-sm font-medium text-gray-500">Turma</h3>
-            {/* Assumindo que reserva.turma tem a estrutura da turma */}
             <p className="text-lg font-medium">{reserva.turmaCodigo}</p>
           </div>
           
@@ -123,29 +128,15 @@ export default function ReservaDetalhes({
           <div>
             <h3 className="text-sm font-medium text-gray-500">Início</h3>
             <p className="text-lg font-medium">
-              {reserva.dataHoraInicio ? 
-                format(new Date(reserva.dataHoraInicio), "dd/MM/yyyy", { locale: ptBR }) : 
-                ''}
+              {formatDateTime(reserva.dataHoraInicio)}
             </p>
-            {reserva.dataHoraInicio && (
-              <p className="text-sm text-gray-600">
-                {format(new Date(reserva.dataHoraInicio), "HH:mm", { locale: ptBR })}
-              </p>
-            )}
           </div>
           
           <div>
             <h3 className="text-sm font-medium text-gray-500">Fim</h3>
             <p className="text-lg font-medium">
-              {reserva.dataHoraFim ? 
-                format(new Date(reserva.dataHoraFim), "dd/MM/yyyy", { locale: ptBR }) : 
-                ''}
+              {formatDateTime(reserva.dataHoraFim)}
             </p>
-            {reserva.dataHoraFim && (
-              <p className="text-sm text-gray-600">
-                {format(new Date(reserva.dataHoraFim), "HH:mm", { locale: ptBR })}
-              </p>
-            )}
           </div>
         </div>
         

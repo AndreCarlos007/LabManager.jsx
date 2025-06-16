@@ -6,7 +6,7 @@ import { Label } from '../ui/label';
 import { Calendar } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar as CalendarUI } from '../ui/calendar';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -21,44 +21,63 @@ export default function ReservaForm({
 }) {
   const router = useRouter();
 
+  // Função para converter para Date mantendo o fuso local
+  const getInitialDate = (dateString) => {
+    return dateString ? new Date(dateString) : new Date();
+  };
+
+  // Função para formatar no padrão da API (ISO sem UTC)
+  const formatToAPI = (date) => {
+    return format(date, "yyyy-MM-dd'T'HH:mm:ss");
+  };
+
+  // Valores iniciais formatados corretamente
+  const initialValues = initialData || {
+    laboratorioId: '',
+    turmaId: '',
+    dataHoraInicio: formatToAPI(new Date()),
+    dataHoraFim: formatToAPI(new Date(new Date().setHours(new Date().getHours() + 1)))
+  };
+
   const { register, handleSubmit, formState: { errors }, setValue } = useForm({
-    defaultValues: initialData || {
-      laboratorioId: '',
-      turmaId: '',
-      dataHoraInicio: new Date(),
-      dataHoraFim: new Date(new Date().setHours(new Date().getHours() + 1))
-    }
+    defaultValues: initialValues
   });
 
-  const [startDate, setStartDate] = useState(initialData?.dataHoraInicio || new Date());
-  const [endDate, setEndDate] = useState(initialData?.dataHoraFim || new Date(new Date().setHours(new Date().getHours() + 1)));
-  const [startTime, setStartTime] = useState(initialData?.dataHoraInicio || new Date());
-  const [endTime, setEndTime] = useState(initialData?.dataHoraFim || new Date(new Date().setHours(new Date().getHours() + 1)));
+  const [startDate, setStartDate] = useState(getInitialDate(initialValues.dataHoraInicio));
+  const [endDate, setEndDate] = useState(getInitialDate(initialValues.dataHoraFim));
+  const [startTime, setStartTime] = useState(getInitialDate(initialValues.dataHoraInicio));
+  const [endTime, setEndTime] = useState(getInitialDate(initialValues.dataHoraFim));
 
   useEffect(() => {
-    const startDateTime = new Date(startDate);
-    startDateTime.setHours(startTime.getHours(), startTime.getMinutes());
-    setValue('dataHoraInicio', startDateTime);
+    // Combina data e hora mantendo o fuso local
+    const combineDateTime = (datePart, timePart) => {
+      const combined = new Date(datePart);
+      combined.setHours(
+        timePart.getHours(),
+        timePart.getMinutes(),
+        0, // segundos
+        0  // milissegundos
+      );
+      return combined;
+    };
 
-    const endDateTime = new Date(endDate);
-    endDateTime.setHours(endTime.getHours(), endTime.getMinutes());
-    setValue('dataHoraFim', endDateTime);
+    const startCombined = combineDateTime(startDate, startTime);
+    const endCombined = combineDateTime(endDate, endTime);
+
+    // Atualiza os valores no formulário com o formato correto
+    setValue('dataHoraInicio', formatToAPI(startCombined));
+    setValue('dataHoraFim', formatToAPI(endCombined));
+    
   }, [startDate, startTime, endDate, endTime, setValue]);
 
+  // Atualiza hora/minuto do estado conforme selects
   const handleTimeChange = (value, target, unit) => {
     const date = target === 'start' ? new Date(startTime) : new Date(endTime);
+    if (unit === 'hour') date.setHours(value);
+    if (unit === 'minute') date.setMinutes(value);
 
-    if (unit === 'hour') {
-      date.setHours(value);
-    } else if (unit === 'minute') {
-      date.setMinutes(value);
-    }
-
-    if (target === 'start') {
-      setStartTime(date);
-    } else {
-      setEndTime(date);
-    }
+    if (target === 'start') setStartTime(date);
+    else setEndTime(date);
   };
 
   return (
@@ -77,16 +96,14 @@ export default function ReservaForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               <option value="">Selecione um laboratório</option>
-              {laboratorios.map((lab) => (
+              {laboratorios.map(lab => (
                 <option key={lab.id} value={lab.id}>
                   {lab.nome} - {lab.localizacao}
                 </option>
               ))}
             </select>
           ) : (
-            <p className="text-gray-500 py-2">
-              {loading ? 'Carregando laboratórios...' : 'Nenhum laboratório disponível'}
-            </p>
+            <p className="text-gray-500 py-2">{loading ? 'Carregando laboratórios...' : 'Nenhum laboratório disponível'}</p>
           )}
           {errors.laboratorioId && <p className="text-red-500 text-sm mt-1">{errors.laboratorioId.message}</p>}
         </div>
@@ -104,16 +121,14 @@ export default function ReservaForm({
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               <option value="">Selecione uma turma</option>
-              {turmas.map((turma) => (
+              {turmas.map(turma => (
                 <option key={turma.id} value={turma.id}>
                   {turma.disciplina} ({turma.codigo})
                 </option>
               ))}
             </select>
           ) : (
-            <p className="text-gray-500 py-2">
-              {loading ? 'Carregando turmas...' : 'Nenhuma turma disponível'}
-            </p>
+            <p className="text-gray-500 py-2">{loading ? 'Carregando turmas...' : 'Nenhuma turma disponível'}</p>
           )}
           {errors.turmaId && <p className="text-red-500 text-sm mt-1">{errors.turmaId.message}</p>}
         </div>

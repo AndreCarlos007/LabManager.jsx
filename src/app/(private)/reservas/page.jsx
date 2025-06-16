@@ -129,7 +129,7 @@ export default function ReservasPage() {
 });
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 ml-2 w-[70rem]">
       <Card className="border-gray-200 bg-gray-50 shadow-sm">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">

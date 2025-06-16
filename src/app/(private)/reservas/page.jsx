@@ -42,12 +42,6 @@ export default function ReservasPage() {
   const { laboratorios, carregarLaboratorios } = useLaboratorio();
   const { turmas, listarTurmas } = useTurma();
 
-  const funcaoToNumber = {
-    'CoordenadorLaboratorio': 2,
-    'CoordenadorCurso': 1,
-    'Reitoria': 3
-  };
-
   useEffect(() => {
     const fetchInitialData = async () => {
       const token = Cookies.get('token');
@@ -61,7 +55,6 @@ export default function ReservasPage() {
         const profile = await getUserProfile(token);
         setUserProfile(profile);
 
-        // Carregar reservas, laboratórios e turmas em paralelo
         await Promise.all([
           listarReservas(),
           carregarLaboratorios(),
@@ -99,14 +92,8 @@ export default function ReservasPage() {
     }
   };
 
-  const handleApprove = async (id, funcao) => {
-    const aprovadorNum = funcaoToNumber[funcao];
-    if (aprovadorNum === undefined) {
-      toast.error('Função de aprovador inválida');
-      return;
-    }
-
-    const success = await aprovarReserva(id, aprovadorNum);
+  const handleApprove = async (id, userFuncao) => {
+    const success = await aprovarReserva(id, userFuncao);
     if (success) {
       view === 'detail' ? obterReservaPorId(id) : listarReservas();
     }
@@ -120,13 +107,13 @@ export default function ReservasPage() {
   };
 
   const filteredReservas = reservas.filter(res => {
-  const search = searchTerm.toLowerCase();
-  return (
-    res.laboratorioNome?.toLowerCase().includes(search) ||
-    res.turmaCodigo?.toLowerCase().includes(search) ||
-    res.professorNome?.toLowerCase().includes(search)
-  );
-});
+    const search = searchTerm.toLowerCase();
+    return (
+      res.laboratorioNome?.toLowerCase().includes(search) ||
+      res.turmaCodigo?.toLowerCase().includes(search) ||
+      res.professorNome?.toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container mx-auto py-8 ml-2 w-[70rem]">
@@ -171,7 +158,7 @@ export default function ReservasPage() {
                 setSelectedReservaId(id);
                 setView('detail');
               }}
-              onApprove={handleApprove}
+              onApprove={(id, funcao) => handleApprove(id, funcao)}
               onReject={handleReject}
               userProfile={userProfile}
             />

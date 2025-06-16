@@ -1,4 +1,3 @@
-// src/components/reservas/ReservaLista.jsx
 import React from 'react';
 import { 
   Table, 
@@ -10,25 +9,10 @@ import {
 } from '../ui/table';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Calendar, Check, X, Eye, Clock } from 'lucide-react';
+import { Calendar, Check, X, Eye, Clock, Loader } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-const statusMap = {
-  0: 'Pendente',
-  1: 'Aprovada',
-  2: 'Rejeitada',
-  3: 'Aguardando Coordenação',
-  4: 'Aguardando Reitoria'
-};
-
-const statusVariant = {
-  Pendente: 'outline',
-  Aprovada: 'success',
-  Rejeitada: 'destructive',
-  'Aguardando Coordenação': 'warning',
-  'Aguardando Reitoria': 'warning'
-};
+import { podeAprovar, getStatusLabel, getStatusBadgeVariant } from '../../lib/reservaUtils';
 
 export default function ReservaLista({ 
   reservas, 
@@ -41,7 +25,7 @@ export default function ReservaLista({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Clock className="h-8 w-8 animate-spin text-gray-500" />
+        <Loader className="h-8 w-8 animate-spin text-gray-500" />
         <span className="ml-2 text-gray-700">Carregando reservas...</span>
       </div>
     );
@@ -49,7 +33,7 @@ export default function ReservaLista({
 
   if (!reservas || reservas.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center p-8">
+      <div className="flex flex-col items-center justify-center h-64 text-center p-8 border rounded-lg bg-gray-50">
         <Calendar className="h-12 w-12 text-gray-400 mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhuma reserva encontrada</h3>
         <p className="text-sm text-gray-500">Crie uma nova reserva para começar</p>
@@ -57,89 +41,90 @@ export default function ReservaLista({
     );
   }
 
-  const canApprove = (reserva) => {
-    if (!userProfile) return false;
-    const statusText = statusMap[reserva.status] || 'Pendente';
-
-    if (userProfile.funcao === 'CoordenadorLaboratorio' && statusText === 'Pendente') {
-      return true;
-    }
-    if (userProfile.funcao === 'CoordenadorCurso' && statusText === 'Aguardando Coordenação') {
-      return true;
-    }
-    if (userProfile.funcao === 'Reitoria' && statusText === 'Aguardando Reitoria') {
-      return true;
-    }
-    return false;
-  };
-
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden shadow-sm">
       <Table className="min-w-full">
         <TableHeader className="bg-gray-50">
           <TableRow>
-            <TableHead>Laboratório</TableHead>
-            <TableHead>Turma</TableHead>
-            <TableHead>Início</TableHead>
-            <TableHead>Fim</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="w-[20%]">Laboratório</TableHead>
+            <TableHead className="w-[15%]">Turma</TableHead>
+            <TableHead className="w-[15%]">Início</TableHead>
+            <TableHead className="w-[15%]">Fim</TableHead>
+            <TableHead className="w-[15%]">Status</TableHead>
+            <TableHead className="w-[20%] text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="divide-y">
           {reservas.map((reserva) => {
-            const statusText = statusMap[reserva.status] || 'Pendente';
+            const mostrarAprovar = podeAprovar(reserva.status, userProfile?.funcao);
+            const mostrarRejeitar = reserva.status < 4;
+            
             return (
               <TableRow key={reserva.id} className="hover:bg-gray-50">
-                <TableCell className="font-medium">
-                  {reserva.laboratorioNome || 'N/A'}
+                <TableCell className="py-3">
+                  <div className="font-medium">
+                    {reserva.laboratorioNome || 'N/A'}
+                  </div>
+                  {reserva.laboratorioLocalizacao && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {reserva.laboratorioLocalizacao}
+                    </div>
+                  )}
                 </TableCell>
-                <TableCell>{reserva.turmaCodigo || 'N/A'}</TableCell>
-                <TableCell>
+                
+                <TableCell className="py-3">
+                  {reserva.turmaCodigo || 'N/A'}
+                </TableCell>
+                
+                <TableCell className="py-3">
                   {reserva.dataHoraInicio ? 
-                    format(new Date(reserva.dataHoraInicio), "dd/MM/yyyy HH:mm", { locale: ptBR }) : 
+                    format(new Date(reserva.dataHoraInicio), "dd/MM/yy HH:mm", { locale: ptBR }) : 
                     'N/A'}
                 </TableCell>
-                <TableCell>
+                
+                <TableCell className="py-3">
                   {reserva.dataHoraFim ? 
-                    format(new Date(reserva.dataHoraFim), "dd/MM/yyyy HH:mm", { locale: ptBR }) : 
+                    format(new Date(reserva.dataHoraFim), "dd/MM/yy HH:mm", { locale: ptBR }) : 
                     'N/A'}
                 </TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant[statusText] || 'outline'}>
-                    {statusText}
+                
+                <TableCell className="py-3">
+                  <Badge variant={getStatusBadgeVariant(reserva.status)}>
+                    {getStatusLabel(reserva.status)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-1">
+                
+                <TableCell className="py-3 text-right">
+                  <div className="flex justify-end space-x-2">
                     <Button 
                       variant="outline" 
-                      size="icon"
+                      size="sm"
                       onClick={() => onView(reserva.id)}
-                      title="Ver detalhes"
+                      className="px-2"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 mr-1" /> Detalhes
                     </Button>
                     
-                    {canApprove(reserva) && (
-                      <>
-                        <Button 
-                          variant="success" 
-                          size="icon"
-                          onClick={() => onApprove(reserva.id, userProfile.funcao)}
-                          title="Aprovar reserva"
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="icon"
-                          onClick={() => onReject(reserva.id)}
-                          title="Rejeitar reserva"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
+                    {mostrarRejeitar && (
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => onReject(reserva.id)}
+                        className="px-2"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {mostrarAprovar && (
+                      <Button 
+                        variant="success" 
+                        size="sm"
+                        onClick={() => onApprove(reserva.id, userProfile.funcao)}
+                        className="px-2"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
                     )}
                   </div>
                 </TableCell>

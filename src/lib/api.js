@@ -1,4 +1,3 @@
-// src/lib/api.js
 const API_URL = "https://labmanagers-bgfbepbvgvgwd5ff.brazilsouth-01.azurewebsites.net/api";
 
 export async function registerUser(userData) {

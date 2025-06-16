@@ -93,10 +93,23 @@ export default function useReserva() {
     }
   }, []);
 
-  const aprovarReserva = useCallback(async (id, aprovador) => {
+  const aprovarReserva = useCallback(async (id, userFuncao) => {
     setLoading(true);
     try {
       const token = getToken();
+      
+      // Mapeia a função do usuário para o nível de aprovação
+      const aprovadorMap = {
+        2: 1, // CoordenadorLaboratorio -> Nível 1
+        1: 2, // CoordenadorCurso -> Nível 2
+        3: 3  // Reitoria -> Nível 3
+      };
+      
+      const aprovador = aprovadorMap[userFuncao];
+      if (!aprovador) {
+        throw new Error('Usuário não tem permissão para aprovar reservas');
+      }
+
       const response = await fetch(`${API_URL}/Reserva/${id}/aprovar?aprovador=${aprovador}`, {
         method: 'PUT',
         headers: {
@@ -109,6 +122,35 @@ export default function useReserva() {
         throw new Error(errorData.message || 'Falha ao aprovar reserva');
       }
       
+      // Atualização otimista
+      setReservas(prev => prev.map(r => 
+        r.id === id ? { 
+          ...r, 
+          status: aprovador,
+          aprovacoes: {
+            ...r.aprovacoes,
+            [aprovador]: {
+              data: new Date().toISOString(),
+              responsavel: 'Você'
+            }
+          }
+        } : r
+      ));
+      
+      if (reserva && reserva.id === id) {
+        setReserva(prev => ({ 
+          ...prev, 
+          status: aprovador,
+          aprovacoes: {
+            ...prev.aprovacoes,
+            [aprovador]: {
+              data: new Date().toISOString(),
+              responsavel: 'Você'
+            }
+          }
+        }));
+      }
+      
       toast.success('Reserva aprovada com sucesso!');
       return true;
     } catch (err) {
@@ -118,12 +160,13 @@ export default function useReserva() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [reserva]);
 
   const rejeitarReserva = useCallback(async (id) => {
     setLoading(true);
     try {
       const token = getToken();
+      
       const response = await fetch(`${API_URL}/Reserva/${id}/rejeitar`, {
         method: 'PUT',
         headers: {
@@ -136,6 +179,29 @@ export default function useReserva() {
         throw new Error(errorData.message || 'Falha ao rejeitar reserva');
       }
       
+      // Atualização otimista
+      setReservas(prev => prev.map(r => 
+        r.id === id ? { 
+          ...r, 
+          status: 4,
+          rejeicao: {
+            data: new Date().toISOString(),
+            responsavel: 'Você'
+          }
+        } : r
+      ));
+      
+      if (reserva && reserva.id === id) {
+        setReserva(prev => ({ 
+          ...prev, 
+          status: 4,
+          rejeicao: {
+            data: new Date().toISOString(),
+            responsavel: 'Você'
+          }
+        }));
+      }
+      
       toast.success('Reserva rejeitada com sucesso!');
       return true;
     } catch (err) {
@@ -145,7 +211,7 @@ export default function useReserva() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [reserva]);
 
   return {
     reservas,

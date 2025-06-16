@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
-import { Calendar } from 'lucide-react';
+import { Calendar, Loader } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar as CalendarUI } from '../ui/calendar';
 import { format, parseISO } from 'date-fns';
@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '../../lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function ReservaForm({ 
   initialData, 
@@ -20,6 +21,8 @@ export default function ReservaForm({
   turmas = []
 }) {
   const router = useRouter();
+  const [formError, setFormError] = useState('');
+  const [dateError, setDateError] = useState('');
 
   // Função para converter para Date mantendo o fuso local
   const getInitialDate = (dateString) => {
@@ -39,30 +42,45 @@ export default function ReservaForm({
     dataHoraFim: formatToAPI(new Date(new Date().setHours(new Date().getHours() + 1)))
   };
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    setValue,
+    watch
+  } = useForm({
     defaultValues: initialValues
   });
 
   const [startDate, setStartDate] = useState(getInitialDate(initialValues.dataHoraInicio));
   const [endDate, setEndDate] = useState(getInitialDate(initialValues.dataHoraFim));
-  const [startTime, setStartTime] = useState(getInitialDate(initialValues.dataHoraInicio));
-  const [endTime, setEndTime] = useState(getInitialDate(initialValues.dataHoraFim));
+  const [startTime, setStartTime] = useState({
+    hours: getInitialDate(initialValues.dataHoraInicio).getHours(),
+    minutes: getInitialDate(initialValues.dataHoraInicio).getMinutes()
+  });
+  const [endTime, setEndTime] = useState({
+    hours: getInitialDate(initialValues.dataHoraFim).getHours(),
+    minutes: getInitialDate(initialValues.dataHoraFim).getMinutes()
+  });
 
+  // Combina data e hora para um objeto Date
+  const combineDateTime = (datePart, timePart) => {
+    const combined = new Date(datePart);
+    combined.setHours(timePart.hours, timePart.minutes, 0, 0);
+    return combined;
+  };
+
+  // Atualiza os valores do formulário quando os estados de data/hora mudam
   useEffect(() => {
-    // Combina data e hora mantendo o fuso local
-    const combineDateTime = (datePart, timePart) => {
-      const combined = new Date(datePart);
-      combined.setHours(
-        timePart.getHours(),
-        timePart.getMinutes(),
-        0, // segundos
-        0  // milissegundos
-      );
-      return combined;
-    };
-
     const startCombined = combineDateTime(startDate, startTime);
     const endCombined = combineDateTime(endDate, endTime);
+
+    // Validação de datas
+    if (startCombined >= endCombined) {
+      setDateError('A data de término deve ser posterior à data de início');
+    } else {
+      setDateError('');
+    }
 
     // Atualiza os valores no formulário com o formato correto
     setValue('dataHoraInicio', formatToAPI(startCombined));
@@ -70,18 +88,45 @@ export default function ReservaForm({
     
   }, [startDate, startTime, endDate, endTime, setValue]);
 
+  // Função para lidar com o envio do formulário
+  const handleFormSubmit = async (data) => {
+    // Verifica se há erro de data
+    const start = new Date(data.dataHoraInicio);
+    const end = new Date(data.dataHoraFim);
+    
+    if (start >= end) {
+      setDateError('A data de término deve ser posterior à data de início');
+      return;
+    }
+
+    // Limpa o erro se estiver tudo certo
+    setDateError('');
+
+    // Chama a função onSubmit passada pelo componente pai
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      setFormError(error.message || 'Ocorreu um erro ao salvar a reserva');
+    }
+  };
+
   // Atualiza hora/minuto do estado conforme selects
   const handleTimeChange = (value, target, unit) => {
-    const date = target === 'start' ? new Date(startTime) : new Date(endTime);
-    if (unit === 'hour') date.setHours(value);
-    if (unit === 'minute') date.setMinutes(value);
-
-    if (target === 'start') setStartTime(date);
-    else setEndTime(date);
+    if (target === 'start') {
+      setStartTime(prev => ({ ...prev, [unit]: parseInt(value) }));
+    } else {
+      setEndTime(prev => ({ ...prev, [unit]: parseInt(value) }));
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      {formError && (
+        <div className="p-3 bg-red-50 text-red-700 rounded-md">
+          {formError}
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Label htmlFor="laboratorioId" className="text-gray-700">Laboratório</Label>
@@ -157,38 +202,39 @@ export default function ReservaForm({
                   selected={startDate}
                   onSelect={setStartDate}
                   initialFocus
+                  disabled={(date) => date < new Date()}
                 />
               </PopoverContent>
             </Popover>
 
             <div className="flex space-x-2">
               <Select
-                value={startTime.getHours().toString()}
-                onValueChange={(value) => handleTimeChange(parseInt(value), 'start', 'hour')}
+                value={startTime.hours.toString()}
+                onValueChange={(value) => handleTimeChange(value, 'start', 'hours')}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Hora" />
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 24 }, (_, i) => (
                     <SelectItem key={i} value={i.toString()}>
-                      {i.toString().padStart(2, '0')}
+                      {i.toString().padStart(2, '0')}h
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select
-                value={startTime.getMinutes().toString()}
-                onValueChange={(value) => handleTimeChange(parseInt(value), 'start', 'minute')}
+                value={startTime.minutes.toString()}
+                onValueChange={(value) => handleTimeChange(value, 'start', 'minutes')}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Minuto" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <SelectItem key={i} value={i.toString()}>
-                      {i.toString().padStart(2, '0')}
+                  {[0, 15, 30, 45].map((minute) => (
+                    <SelectItem key={minute} value={minute.toString()}>
+                      {minute.toString().padStart(2, '0')}min
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -219,38 +265,39 @@ export default function ReservaForm({
                   selected={endDate}
                   onSelect={setEndDate}
                   initialFocus
+                  disabled={(date) => date < new Date()}
                 />
               </PopoverContent>
             </Popover>
 
             <div className="flex space-x-2">
               <Select
-                value={endTime.getHours().toString()}
-                onValueChange={(value) => handleTimeChange(parseInt(value), 'end', 'hour')}
+                value={endTime.hours.toString()}
+                onValueChange={(value) => handleTimeChange(value, 'end', 'hours')}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Hora" />
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 24 }, (_, i) => (
                     <SelectItem key={i} value={i.toString()}>
-                      {i.toString().padStart(2, '0')}
+                      {i.toString().padStart(2, '0')}h
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               <Select
-                value={endTime.getMinutes().toString()}
-                onValueChange={(value) => handleTimeChange(parseInt(value), 'end', 'minute')}
+                value={endTime.minutes.toString()}
+                onValueChange={(value) => handleTimeChange(value, 'end', 'minutes')}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Minuto" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 60 }, (_, i) => (
-                    <SelectItem key={i} value={i.toString()}>
-                      {i.toString().padStart(2, '0')}
+                  {[0, 15, 30, 45].map((minute) => (
+                    <SelectItem key={minute} value={minute.toString()}>
+                      {minute.toString().padStart(2, '0')}min
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -259,6 +306,12 @@ export default function ReservaForm({
           </div>
         </div>
       </div>
+
+      {dateError && (
+        <div className="p-3 bg-yellow-50 text-yellow-700 rounded-md">
+          {dateError}
+        </div>
+      )}
 
       <div className="flex justify-end space-x-3">
         <Button 
@@ -273,9 +326,14 @@ export default function ReservaForm({
         <Button 
           type="submit" 
           className="bg-gray-800 hover:bg-gray-900 text-gray-50"
-          disabled={loading}
+          disabled={loading || dateError}
         >
-          {loading ? 'Salvando...' : 'Salvar Reserva'}
+          {loading ? (
+            <>
+              <Loader className="h-4 w-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : 'Salvar Reserva'}
         </Button>
       </div>
     </form>

@@ -1,26 +1,20 @@
-import React from 'react';
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
-} from '../ui/table';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Calendar, Check, X, Eye, Clock, Loader } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { podeAprovar, getStatusLabel, getStatusBadgeVariant } from '../../lib/reservaUtils';
+"use client"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "../ui/table"
+import { Button } from "../ui/button"
+import { Badge } from "../ui/badge"
+import { Calendar, Check, X, Eye, Loader } from "lucide-react"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { podeAprovar, getStatusLabel, getStatusBadgeVariant } from "../../lib/reservaUtils"
 
-export default function ReservaLista({ 
-  reservas, 
-  loading, 
-  onView, 
+export default function ReservaLista({
+  reservas,
+  loading,
+  onView,
   onApprove,
   onReject,
-  userProfile
+  userProfile,
+  temPermissaoAdministrativa,
 }) {
   if (loading) {
     return (
@@ -28,7 +22,7 @@ export default function ReservaLista({
         <Loader className="h-8 w-8 animate-spin text-gray-500" />
         <span className="ml-2 text-gray-700">Carregando reservas...</span>
       </div>
-    );
+    )
   }
 
   if (!reservas || reservas.length === 0) {
@@ -38,7 +32,7 @@ export default function ReservaLista({
         <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhuma reserva encontrada</h3>
         <p className="text-sm text-gray-500">Crie uma nova reserva para começar</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -56,72 +50,65 @@ export default function ReservaLista({
         </TableHeader>
         <TableBody className="divide-y">
           {reservas.map((reserva) => {
-            const mostrarAprovar = podeAprovar(reserva.status, userProfile?.funcao);
-            const mostrarRejeitar = reserva.status < 4;
-            
+            const mostrarAprovar =
+              temPermissaoAdministrativa &&
+              temPermissaoAdministrativa(userProfile?.funcao) &&
+              podeAprovar(reserva.status, userProfile?.funcao)
+            const mostrarRejeitar =
+              temPermissaoAdministrativa && temPermissaoAdministrativa(userProfile?.funcao) && reserva.status < 4
+
             return (
               <TableRow key={reserva.id} className="hover:bg-gray-50">
                 <TableCell className="py-3">
-                  <div className="font-medium">
-                    {reserva.laboratorioNome || 'N/A'}
-                  </div>
+                  <div className="font-medium">{reserva.laboratorioNome || "N/A"}</div>
                   {reserva.laboratorioLocalizacao && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      {reserva.laboratorioLocalizacao}
-                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{reserva.laboratorioLocalizacao}</div>
                   )}
                 </TableCell>
-                
+
+                <TableCell className="py-3">{reserva.turmaCodigo || "N/A"}</TableCell>
+
                 <TableCell className="py-3">
-                  {reserva.turmaCodigo || 'N/A'}
+                  {reserva.dataHoraInicio
+                    ? format(new Date(reserva.dataHoraInicio), "dd/MM/yy HH:mm", { locale: ptBR })
+                    : "N/A"}
                 </TableCell>
-                
+
                 <TableCell className="py-3">
-                  {reserva.dataHoraInicio ? 
-                    format(new Date(reserva.dataHoraInicio), "dd/MM/yy HH:mm", { locale: ptBR }) : 
-                    'N/A'}
+                  {reserva.dataHoraFim
+                    ? format(new Date(reserva.dataHoraFim), "dd/MM/yy HH:mm", { locale: ptBR })
+                    : "N/A"}
                 </TableCell>
-                
+
                 <TableCell className="py-3">
-                  {reserva.dataHoraFim ? 
-                    format(new Date(reserva.dataHoraFim), "dd/MM/yy HH:mm", { locale: ptBR }) : 
-                    'N/A'}
+                  <Badge variant={getStatusBadgeVariant(reserva.status)}>{getStatusLabel(reserva.status)}</Badge>
                 </TableCell>
-                
-                <TableCell className="py-3">
-                  <Badge variant={getStatusBadgeVariant(reserva.status)}>
-                    {getStatusLabel(reserva.status)}
-                  </Badge>
-                </TableCell>
-                
+
                 <TableCell className="py-3 text-right">
                   <div className="flex justify-end space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onView(reserva.id)}
-                      className="px-2"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => onView(reserva.id)} className="px-2">
                       <Eye className="h-4 w-4 mr-1" /> Detalhes
                     </Button>
-                    
+
                     {mostrarRejeitar && (
-                      <Button 
-                        variant="destructive" 
+                      <Button
+                        variant="destructive"
                         size="sm"
                         onClick={() => onReject(reserva.id)}
                         className="px-2"
+                        title="Rejeitar reserva"
                       >
                         <X className="h-4 w-4" />
                       </Button>
                     )}
-                    
+
                     {mostrarAprovar && (
-                      <Button 
-                        variant="success" 
+                      <Button
+                        variant="success"
                         size="sm"
                         onClick={() => onApprove(reserva.id, userProfile.funcao)}
                         className="px-2"
+                        title="Aprovar reserva"
                       >
                         <Check className="h-4 w-4" />
                       </Button>
@@ -129,10 +116,10 @@ export default function ReservaLista({
                   </div>
                 </TableCell>
               </TableRow>
-            );
+            )
           })}
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

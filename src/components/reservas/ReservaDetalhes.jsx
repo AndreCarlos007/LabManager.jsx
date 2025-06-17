@@ -15,9 +15,20 @@ import {
   getEtapaBadgeVariant,
 } from "../../lib/reservaUtils"
 
-export default function ReservaDetalhes({ reserva, onApprove, onReject, onBack, userProfile }) {
-  const mostrarAprovar = podeAprovar(reserva.status, userProfile?.funcao)
-  const mostrarRejeitar = reserva.status < 4
+export default function ReservaDetalhes({
+  reserva,
+  onApprove,
+  onReject,
+  onBack,
+  userProfile,
+  temPermissaoAdministrativa,
+}) {
+  const mostrarAprovar =
+    temPermissaoAdministrativa &&
+    temPermissaoAdministrativa(userProfile?.funcao) &&
+    podeAprovar(reserva.status, userProfile?.funcao)
+  const mostrarRejeitar =
+    temPermissaoAdministrativa && temPermissaoAdministrativa(userProfile?.funcao) && reserva.status < 4
 
   // Renderiza o fluxo de aprovação com informações detalhadas
   const renderApprovalFlow = () => {
@@ -152,19 +163,22 @@ export default function ReservaDetalhes({ reserva, onApprove, onReject, onBack, 
           Voltar
         </Button>
 
-        <div className="flex space-x-3">
-          {mostrarRejeitar && (
-            <Button variant="destructive" onClick={() => onReject(reserva.id, userProfile.funcao)} className="px-6">
-              <X className="mr-2 h-4 w-4" /> Rejeitar
-            </Button>
-          )}
+        {/* Só mostra os botões de ação para usuários com permissão administrativa */}
+        {temPermissaoAdministrativa && temPermissaoAdministrativa(userProfile?.funcao) && (
+          <div className="flex space-x-3">
+            {mostrarRejeitar && (
+              <Button variant="destructive" onClick={() => onReject(reserva.id, userProfile.funcao)} className="px-6">
+                <X className="mr-2 h-4 w-4" /> Rejeitar
+              </Button>
+            )}
 
-          {mostrarAprovar && (
-            <Button variant="success" onClick={() => onApprove(reserva.id, userProfile.funcao)} className="px-6">
-              <Check className="mr-2 h-4 w-4" /> Aprovar
-            </Button>
-          )}
-        </div>
+            {mostrarAprovar && (
+              <Button variant="success" onClick={() => onApprove(reserva.id, userProfile.funcao)} className="px-6">
+                <Check className="mr-2 h-4 w-4" /> Aprovar
+              </Button>
+            )}
+          </div>
+        )}
       </CardFooter>
     </Card>
   )

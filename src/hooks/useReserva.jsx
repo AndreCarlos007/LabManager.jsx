@@ -64,17 +64,26 @@ export default function useReserva() {
   }, []);
 
   const criarReserva = useCallback(async (reservaData) => {
-    setLoading(true);
-    try {
-      const token = getToken();
-      const response = await fetch(`${API_URL}/Reserva/criarReserva`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(reservaData)
-      });
+  setLoading(true);
+  try {
+    const token = getToken();
+    
+    // Criar payload apenas com campos necessários
+    const payload = {
+      laboratorioId: reservaData.laboratorioId,
+      turmaId: reservaData.turmaId,
+      dataHoraInicio: reservaData.dataHoraInicio,
+      dataHoraFim: reservaData.dataHoraFim
+    };
+
+    const response = await fetch(`${API_URL}/Reserva/criarReserva`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload) // Envia apenas os campos necessários
+    });
       
       if (!response.ok) {
         const errorData = await response.json();

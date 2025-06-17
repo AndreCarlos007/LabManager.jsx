@@ -109,13 +109,6 @@ export default function DashboardPage() {
   const getQuickActions = () => {
     const baseActions = [
       {
-        title: "Nova Reserva",
-        description: "Criar uma nova reserva de laboratório",
-        icon: Plus,
-        href: "/reservas",
-        color: "bg-blue-500 hover:bg-blue-600",
-      },
-      {
         title: "Ver Reservas",
         description: "Visualizar todas as reservas",
         icon: Calendar,

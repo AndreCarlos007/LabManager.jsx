@@ -489,13 +489,6 @@ export default function DashboardPage() {
                 </Link>
               )}
 
-              <Link href="/perfil">
-                <Button variant="ghost" className="w-full justify-start">
-                  <Users className="h-4 w-4 mr-2" />
-                  Meu Perfil
-                </Button>
-              </Link>
-
               <Link href="/reservas">
                 <Button variant="ghost" className="w-full justify-start">
                   <Calendar className="h-4 w-4 mr-2" />

@@ -78,7 +78,7 @@ export default function LaboratorioDetalhes({
               <LayoutGrid className="h-5 w-5 text-gray-500 mt-0.5 mr-3" />
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Área</h3>
-                <p className="text-gray-900">{laboratorio.area} m²</p>
+                <p className="text-gray-900">{laboratorio.area}</p>
               </div>
             </div>
             

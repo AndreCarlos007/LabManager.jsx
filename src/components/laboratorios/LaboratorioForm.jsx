@@ -69,13 +69,13 @@ export default function LaboratorioForm({
         </div>
 
         <div>
-          <Label htmlFor="area" className="text-gray-700">Área (m²)</Label>
+          <Label htmlFor="area" className="text-gray-700">Área</Label>
           <Input
             id="area"
             {...register('area', { required: 'Área é obrigatória' })}
             disabled={loading}
             className="bg-white border-gray-300 text-gray-900"
-            placeholder="Ex: 120"
+            placeholder="Ex: Informatica"
           />
           {errors.area && <p className="text-red-500 text-sm mt-1">{errors.area.message}</p>}
         </div>

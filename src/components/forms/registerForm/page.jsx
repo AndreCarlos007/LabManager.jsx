@@ -1,7 +1,7 @@
-"use client";
-import React, { useState } from "react";
-import { registerUser } from "../../../lib/api";
-import { useRouter } from "next/navigation";
+"use client"
+import { useState } from "react"
+import { registerUser } from "../../../lib/api"
+import { useRouter } from "next/navigation"
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -9,27 +9,27 @@ export default function RegisterForm() {
     emailInstitucional: "",
     senha: "",
     funcao: 0,
-    cursoId: 0
-  });
+    cursoId: 1, // Valor padrão para "Engenharia de Software"
+  })
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
+  const router = useRouter()
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'funcao' || name === 'cursoId' ? parseInt(value) : value
-    }));
-  };
+      [name]: name === "funcao" || name === "cursoId" ? Number.parseInt(value) : value,
+    }))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
+
     try {
       // Prepara os dados no formato exato esperado pela API
       const userData = {
@@ -37,34 +37,33 @@ export default function RegisterForm() {
         emailInstitucional: formData.emailInstitucional,
         senha: formData.senha,
         funcao: formData.funcao,
-        cursoId: formData.cursoId
-      };
+        cursoId: formData.cursoId,
+      }
 
       // Chama a função de registro com o endpoint corrigido
-      await registerUser(userData);
+      await registerUser(userData)
 
-      setSuccess(true);
-      
+      setSuccess(true)
+
       // Limpa o formulário após sucesso
       setFormData({
         nome: "",
         emailInstitucional: "",
         senha: "",
         funcao: 0,
-        cursoId: 0
-      });
-      
+        cursoId: 1,
+      })
+
       // Redireciona para login após 3 segundos
       setTimeout(() => {
-        router.push("/login");
-      }, 3000);
-      
+        router.push("/login")
+      }, 3000)
     } catch (err) {
-      setError(err.message || "Erro durante o registro");
+      setError(err.message || "Erro durante o registro")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const funcoes = [
     { id: 0, label: "Professor" },
@@ -72,15 +71,15 @@ export default function RegisterForm() {
     { id: 2, label: "Coordenador de Laboratório" },
     { id: 3, label: "Reitoria" },
     { id: 4, label: "Técnico" },
-    { id: 5, label: "Auditor" }
-  ];
+    { id: 5, label: "Auditor" },
+  ]
 
   const cursos = [
-    { id: 0, label: "Ciência da Computação" },
     { id: 1, label: "Engenharia de Software" },
-    { id: 2, label: "Medicina" },
-    { id: 3, label: "Administração" }
-  ];
+    { id: 2, label: "Ciência da Computação" },
+    { id: 3, label: "Sistemas de Informação" },
+    { id: 4, label: "Análise e Desenvolvimento de Sistemas" },
+  ]
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -88,11 +87,7 @@ export default function RegisterForm() {
         {/* Coluna da Imagem */}
         <div className="md:w-1/2 bg-purple-600 flex items-center justify-center p-8">
           <div className="relative w-full h-64 md:h-full">
-            <img 
-              src="/images.png" 
-              alt="Laboratório" 
-              className="object-cover w-full h-full rounded-lg"
-            />
+            <img src="/images.png" alt="Laboratório" className="object-cover w-full h-full rounded-lg" />
           </div>
         </div>
 
@@ -201,29 +196,48 @@ export default function RegisterForm() {
             <button
               type="submit"
               className={`w-full bg-purple-600 text-white py-2 rounded-md transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
-                isLoading 
-                  ? 'opacity-70 cursor-not-allowed' 
-                  : 'hover:bg-purple-700 cursor-pointer'
+                isLoading ? "opacity-70 cursor-not-allowed" : "hover:bg-purple-700 cursor-pointer"
               }`}
               disabled={isLoading}
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Registrando...
                 </span>
-              ) : 'Registrar'}
+              ) : (
+                "Registrar"
+              )}
             </button>
 
             <p className="text-center text-sm text-gray-500 mt-4">
-              Já tem uma conta? <a href="/login" className="text-purple-600 hover:underline">Entrar</a>
+              Já tem uma conta?{" "}
+              <a href="/login" className="text-purple-600 hover:underline">
+                Entrar
+              </a>
             </p>
           </form>
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,29 +1,13 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { getCookie, deleteCookie } from "@/lib/cookies";
-import { useRouter } from "next/navigation";
+"use client"
+import { useState } from "react"
+import { useUserProfile } from "@/hooks/useUserProfile"
+import { deleteCookie } from "@/lib/cookies"
+import { useRouter } from "next/navigation"
+import { getFuncaoLabel } from "@/lib/constants"
 
-import {
-  Home,
-  BookOpenCheck,
-  Info,
-  ChevronUp,
-  TestTubeDiagonal,
-  Ungroup,
-  Users,
-  DatabaseBackup,
-  LogOut,
-  User,
-} from "lucide-react";
+import { Home, BookOpenCheck, Info, ChevronUp, TestTubeDiagonal, Ungroup, Users, LogOut, User } from "lucide-react"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 import {
   Sidebar,
@@ -36,15 +20,10 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarHeader,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import Image from "next/image";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import Image from "next/image"
 
 const items = [
   {
@@ -72,30 +51,17 @@ const items = [
     url: "/relatorio",
     icon: Info,
   },
-];
-
-// Função para formatar o nome da função
-const getFuncaoLabel = (funcaoId) => {
-  const funcoes = {
-    0: "Professor",
-    1: "Coordenador de Curso",
-    2: "Coordenador de Laboratório",
-    3: "Reitoria",
-    4: "Técnico",
-    5: "Auditor"
-  };
-  return funcoes[funcaoId] || "Desconhecido";
-};
+]
 
 export function AppSidebar() {
-  const router = useRouter();
-  const [abrirDialogo, setDialogo] = useState(false);
-  const { userProfile, loading, error } = useUserProfile();
+  const router = useRouter()
+  const [abrirDialogo, setDialogo] = useState(false)
+  const { userProfile, loading, error } = useUserProfile()
 
   const handleLogout = () => {
-    deleteCookie('token');
-    router.push('/login');
-  };
+    deleteCookie("token")
+    router.push("/login")
+  }
 
   return (
     <Sidebar>
@@ -134,25 +100,25 @@ export function AppSidebar() {
               ) : userProfile ? (
                 <span className="space-y-2">
                   <span className="flex justify-center mb-4">
-                     <Image src='/image.png' width={100} height={100} className="rounded-2xl" alt="Avatar Perfil"/>
+                    <Image src="/image.png" width={100} height={100} className="rounded-2xl" alt="Avatar Perfil" />
                   </span>
-                  
+
                   <span className="grid grid-cols-2 gap-2">
                     <span className="font-medium">ID:</span>
                     <span>{userProfile.id}</span>
-                    
+
                     <span className="font-medium">Nome:</span>
                     <span>{userProfile.nome}</span>
-                    
+
                     <span className="font-medium">Matrícula:</span>
-                    <span>{userProfile.matricula || 'N/A'}</span>
-                    
+                    <span>{userProfile.matricula || "N/A"}</span>
+
                     <span className="font-medium">E-Mail:</span>
                     <span>{userProfile.emailInstitucional}</span>
-                    
+
                     <span className="font-medium">Curso:</span>
                     <span>{userProfile.cursoNome}</span>
-                    
+
                     <span className="font-medium">Função:</span>
                     <span>{getFuncaoLabel(userProfile.funcao)}</span>
                   </span>
@@ -175,23 +141,15 @@ export function AppSidebar() {
                   {loading ? (
                     <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
                   ) : userProfile ? (
-                    <span className="truncate max-w-[120px]">
-                      {userProfile.nome.split(' ')[0]}
-                    </span>
+                    <span className="truncate max-w-[120px]">{userProfile.nome.split(" ")[0]}</span>
                   ) : (
-                    'Perfil'
+                    "Perfil"
                   )}
                   <ChevronUp className="ml-auto w-4 h-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
-                <DropdownMenuItem
-                  onClick={() => setDialogo(true)}
-                  className="cursor-pointer flex items-center gap-2"
-                >
+              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                <DropdownMenuItem onClick={() => setDialogo(true)} className="cursor-pointer flex items-center gap-2">
                   <User className="w-4 h-4" />
                   <span>Perfil</span>
                 </DropdownMenuItem>
@@ -209,5 +167,5 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

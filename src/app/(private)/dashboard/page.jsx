@@ -95,6 +95,10 @@ export default function DashboardPage() {
         return "Coordenador de Laboratório"
       case 3:
         return "Reitoria"
+      case 4:
+        return "Técnico"
+      case 5: 
+        return "Auditoria"
       default:
         return "Professor"
     }

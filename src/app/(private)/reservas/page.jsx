@@ -120,7 +120,7 @@ export default function ReservasPage() {
   // Se não estiver na view de lista, renderiza as outras views
   if (view !== "list") {
     return (
-      <div className="container mx-auto py-8 ml-2 w-[70rem]">
+      <div className="container mx-auto py-8 px-6 space-y-6 transition-all duration-300 ease-in-out peer-data-[state=collapsed]:max-w-6xl peer-data-[state=collapsed]:mx-auto">
         <Card className="border-gray-200 bg-gray-50 shadow-sm">
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -178,7 +178,7 @@ export default function ReservasPage() {
 
   // View principal com os 3 cards separados
   return (
-    <div className="container mx-auto py-8 ml-2 w-[70rem] space-y-6">
+    <div className="container mx-auto py-8 px-6 space-y-6 transition-all duration-300 ease-in-out peer-data-[state=collapsed]:max-w-6xl peer-data-[state=collapsed]:mx-auto">
       {/* Header com busca e botão de nova reserva */}
       <Card className="border-gray-200 bg-gray-50 shadow-sm">
         <CardHeader>

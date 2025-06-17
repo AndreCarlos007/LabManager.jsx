@@ -22,6 +22,8 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import useAuditoria from "../../../hooks/useAuditoria"
 import { toast } from "sonner"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 export default function RelatorioPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -72,12 +74,8 @@ export default function RelatorioPage() {
   }
 
   // Função para gerar PDF
-  const gerarPDF = async () => {
+  const gerarPDF = () => {
     try {
-      // Importação dinâmica para garantir que funcione no cliente
-      const jsPDF = (await import("jspdf")).default
-      const autoTable = (await import("jspdf-autotable")).default
-
       const doc = new jsPDF()
 
       // Configurar fonte para suportar caracteres especiais
@@ -103,7 +101,7 @@ export default function RelatorioPage() {
         item.status,
       ])
 
-      // Configurar tabela usando autoTable
+      // Configurar tabela
       autoTable(doc, {
         head: [["Professor", "Turma", "Disciplina", "Laboratório", "Início", "Fim", "Status"]],
         body: tableData,
@@ -149,7 +147,7 @@ export default function RelatorioPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 ml-2 w-[70rem] space-y-6">
+    <div className="container mx-auto py-8 px-6 space-y-6 transition-all duration-300 ease-in-out peer-data-[state=collapsed]:max-w-6xl peer-data-[state=collapsed]:mx-auto">
       {/* Header */}
       <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm">
         <CardHeader>

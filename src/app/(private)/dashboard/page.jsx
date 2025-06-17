@@ -31,6 +31,7 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { getStatusLabel, getStatusBadgeVariant } from "../../../lib/reservaUtils"
+import { FUNCOES, getFuncaoLabel } from "../../../lib/constants"
 
 export default function DashboardPage() {
   const [userProfile, setUserProfile] = useState(null)
@@ -62,6 +63,17 @@ export default function DashboardPage() {
     fetchData()
   }, [])
 
+  // Função para verificar se o usuário tem permissões administrativas
+  const temPermissaoAdministrativa = (funcao) => {
+    return [
+      FUNCOES.COORDENADOR_CURSO,
+      FUNCOES.COORDENADOR_LABORATORIO,
+      FUNCOES.REITORIA,
+      FUNCOES.TECNICO,
+      FUNCOES.AUDITOR,
+    ].includes(funcao)
+  }
+
   // Cálculos de estatísticas baseados nos dados reais
   const stats = {
     totalReservas: reservas.length,
@@ -76,64 +88,74 @@ export default function DashboardPage() {
 
   const getFuncaoColor = (funcao) => {
     switch (funcao) {
-      case 1:
+      case FUNCOES.PROFESSOR:
         return "bg-blue-500"
-      case 2:
+      case FUNCOES.COORDENADOR_CURSO:
         return "bg-green-500"
-      case 3:
+      case FUNCOES.COORDENADOR_LABORATORIO:
         return "bg-purple-500"
-      default:
+      case FUNCOES.REITORIA:
+        return "bg-red-500"
+      case FUNCOES.TECNICO:
+        return "bg-orange-500"
+      case FUNCOES.AUDITOR:
         return "bg-gray-500"
-    }
-  }
-
-  const getFuncaoLabel = (funcao) => {
-    switch (funcao) {
-      case 1:
-        return "Coordenador de Curso"
-      case 2:
-        return "Coordenador de Laboratório"
-      case 3:
-        return "Reitoria"
-      case 4:
-        return "Técnico"
-      case 5: 
-        return "Auditoria"
       default:
-        return "Professor"
+        return "bg-gray-400"
     }
   }
 
-  const quickActions = [
-    {
-      title: "Nova Reserva",
-      description: "Criar uma nova reserva de laboratório",
-      icon: Plus,
-      href: "/reservas",
-      color: "bg-blue-500 hover:bg-blue-600",
-    },
-    {
-      title: "Ver Reservas",
-      description: "Visualizar todas as reservas",
-      icon: Calendar,
-      href: "/reservas",
-      color: "bg-green-500 hover:bg-green-600",
-    },
-    {
-      title: "Gerenciar Labs",
-      description: "Administrar laboratórios",
-      icon: TestTubeDiagonal,
-      href: "/labs",
-      color: "bg-purple-500 hover:bg-purple-600",
-    },
-    {
-      title: "Gerenciar Turmas",
-      description: "Administrar turmas",
-      icon: Ungroup,
-      href: "/turmas",
-      color: "bg-orange-500 hover:bg-orange-600",
-    },
-  ]
+  // Ações rápidas baseadas nas permissões do usuário
+  const getQuickActions = () => {
+    const baseActions = [
+      {
+        title: "Nova Reserva",
+        description: "Criar uma nova reserva de laboratório",
+        icon: Plus,
+        href: "/reservas",
+        color: "bg-blue-500 hover:bg-blue-600",
+      },
+      {
+        title: "Ver Reservas",
+        description: "Visualizar todas as reservas",
+        icon: Calendar,
+        href: "/reservas",
+        color: "bg-green-500 hover:bg-green-600",
+      },
+    ]
+
+    // Adiciona ações administrativas baseadas na função específica
+    if ([FUNCOES.COORDENADOR_CURSO, FUNCOES.COORDENADOR_LABORATORIO, FUNCOES.REITORIA].includes(userProfile?.funcao)) {
+      baseActions.push(
+        {
+          title: "Gerenciar Labs",
+          description: "Administrar laboratórios",
+          icon: TestTubeDiagonal,
+          href: "/labs",
+          color: "bg-purple-500 hover:bg-purple-600",
+        },
+        {
+          title: "Gerenciar Turmas",
+          description: "Administrar turmas",
+          icon: Ungroup,
+          href: "/turmas",
+          color: "bg-orange-500 hover:bg-orange-600",
+        },
+      )
+    }
+
+    if ([FUNCOES.REITORIA, FUNCOES.AUDITOR].includes(userProfile?.funcao)) {
+      baseActions.push({
+        title: "Relatórios",
+        description: "Visualizar relatórios de auditoria",
+        icon: Info,
+        href: "/relatorio",
+        color: "bg-red-500 hover:bg-red-600",
+      })
+    }
+
+    return baseActions
+  }
 
   // Reservas recentes (últimas 5)
   const reservasRecentes = reservas.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao)).slice(0, 5)
@@ -151,7 +173,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-6 space-y-8 ml-6">
+    <div className="container mx-auto py-8 px-6 space-y-8 transition-all duration-300 ease-in-out peer-data-[state=collapsed]:max-w-6xl peer-data-[state=collapsed]:mx-auto">
       {/* Header com boas-vindas */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
@@ -223,11 +245,14 @@ export default function DashboardPage() {
             <TrendingUp className="h-5 w-5" />
             Ações Rápidas
           </CardTitle>
-          <CardDescription>Acesse rapidamente as funcionalidades principais</CardDescription>
+          <CardDescription>
+            Acesse rapidamente as funcionalidades{" "}
+            {temPermissaoAdministrativa(userProfile?.funcao) ? "administrativas" : "disponíveis"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
+            {getQuickActions().map((action, index) => (
               <Link key={index} href={action.href}>
                 <Button className={`w-full h-auto p-4 ${action.color} text-white flex flex-col items-center gap-2`}>
                   <action.icon className="h-6 w-6" />
@@ -291,60 +316,97 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Status dos Laboratórios */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Status dos Laboratórios
-            </CardTitle>
-            <CardDescription>Situação atual dos laboratórios</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-green-600">{stats.laboratoriosDisponiveis}</div>
-                  <div className="text-xs text-gray-600">Disponíveis</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-red-600">{stats.laboratoriosManutencao}</div>
-                  <div className="text-xs text-gray-600">Em Manutenção</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">{stats.totalLaboratorios}</div>
-                  <div className="text-xs text-gray-600">Total</div>
-                </div>
-              </div>
-
-              {labsManutencao.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    Laboratórios em Manutenção
-                  </h4>
-                  <div className="space-y-2">
-                    {labsManutencao.slice(0, 3).map((lab) => (
-                      <div key={lab.id} className="flex items-center justify-between p-2 bg-yellow-50 rounded">
-                        <span className="text-sm font-medium">{lab.nome}</span>
-                        <Badge variant="destructive" className="text-xs">
-                          Manutenção
-                        </Badge>
-                      </div>
-                    ))}
+        {/* Status dos Laboratórios - Só mostra para usuários com permissão */}
+        {temPermissaoAdministrativa(userProfile?.funcao) ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Status dos Laboratórios
+              </CardTitle>
+              <CardDescription>Situação atual dos laboratórios</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">{stats.laboratoriosDisponiveis}</div>
+                    <div className="text-xs text-gray-600">Disponíveis</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-red-600">{stats.laboratoriosManutencao}</div>
+                    <div className="text-xs text-gray-600">Em Manutenção</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">{stats.totalLaboratorios}</div>
+                    <div className="text-xs text-gray-600">Total</div>
                   </div>
                 </div>
-              )}
 
-              <Link href="/labs">
-                <Button variant="outline" className="w-full">
-                  Gerenciar laboratórios
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+                {labsManutencao.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                      Laboratórios em Manutenção
+                    </h4>
+                    <div className="space-y-2">
+                      {labsManutencao.slice(0, 3).map((lab) => (
+                        <div key={lab.id} className="flex items-center justify-between p-2 bg-yellow-50 rounded">
+                          <span className="text-sm font-medium">{lab.nome}</span>
+                          <Badge variant="destructive" className="text-xs">
+                            Manutenção
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Link href="/labs">
+                  <Button variant="outline" className="w-full">
+                    Gerenciar laboratórios
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          // Card alternativo para usuários sem permissão administrativa
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Meu Perfil
+              </CardTitle>
+              <CardDescription>Informações da sua conta</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Nome:</span>
+                  <span className="text-sm">{userProfile?.nome || "N/A"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Email:</span>
+                  <span className="text-sm">{userProfile?.emailInstitucional || "N/A"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Função:</span>
+                  <Badge className={`${getFuncaoColor(userProfile?.funcao)} text-white`}>
+                    {getFuncaoLabel(userProfile?.funcao)}
+                  </Badge>
+                </div>
+                <Link href="/perfil">
+                  <Button variant="outline" className="w-full">
+                    Ver perfil completo
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Estatísticas Gerais */}
         <Card>
@@ -357,13 +419,15 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Ungroup className="h-4 w-4 text-indigo-500" />
-                  <span className="text-sm font-medium">Total de Turmas</span>
+              {temPermissaoAdministrativa(userProfile?.funcao) && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Ungroup className="h-4 w-4 text-indigo-500" />
+                    <span className="text-sm font-medium">Total de Turmas</span>
+                  </div>
+                  <span className="text-lg font-bold">{stats.totalTurmas}</span>
                 </div>
-                <span className="text-lg font-bold">{stats.totalTurmas}</span>
-              </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -385,7 +449,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Links Rápidos */}
+        {/* Links Rápidos - Condicionais baseados na permissão */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -396,24 +460,46 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Link href="/turmas">
-                <Button variant="ghost" className="w-full justify-start">
-                  <Ungroup className="h-4 w-4 mr-2" />
-                  Gerenciar Turmas
-                </Button>
-              </Link>
+              {[FUNCOES.COORDENADOR_CURSO, FUNCOES.COORDENADOR_LABORATORIO, FUNCOES.REITORIA].includes(
+                userProfile?.funcao,
+              ) && (
+                <>
+                  <Link href="/turmas">
+                    <Button variant="ghost" className="w-full justify-start">
+                      <Ungroup className="h-4 w-4 mr-2" />
+                      Gerenciar Turmas
+                    </Button>
+                  </Link>
 
-              <Link href="/relatorio">
-                <Button variant="ghost" className="w-full justify-start">
-                  <Info className="h-4 w-4 mr-2" />
-                  Relatórios
-                </Button>
-              </Link>
+                  <Link href="/labs">
+                    <Button variant="ghost" className="w-full justify-start">
+                      <TestTubeDiagonal className="h-4 w-4 mr-2" />
+                      Gerenciar Laboratórios
+                    </Button>
+                  </Link>
+                </>
+              )}
+
+              {[FUNCOES.REITORIA, FUNCOES.AUDITOR].includes(userProfile?.funcao) && (
+                <Link href="/relatorio">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Info className="h-4 w-4 mr-2" />
+                    Relatórios de Auditoria
+                  </Button>
+                </Link>
+              )}
 
               <Link href="/perfil">
                 <Button variant="ghost" className="w-full justify-start">
                   <Users className="h-4 w-4 mr-2" />
                   Meu Perfil
+                </Button>
+              </Link>
+
+              <Link href="/reservas">
+                <Button variant="ghost" className="w-full justify-start">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Minhas Reservas
                 </Button>
               </Link>
             </div>

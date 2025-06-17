@@ -1,3 +1,4 @@
+import { Space_Grotesk } from "next/font/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../styles/globals.css";
 
@@ -11,6 +12,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata = {
   title: "Lab Manager",
   description: "Gerenciamento de laboratorios",
@@ -19,9 +26,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-br">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${spaceGrotesk.variable} antialiased`}>
         {children}
       </body>
     </html>

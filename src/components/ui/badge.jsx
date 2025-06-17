@@ -1,7 +1,6 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
-
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
@@ -17,6 +16,10 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        success:
+          "border-transparent bg-green-500 text-white [a&]:hover:bg-green-600 focus-visible:ring-green-500/20 dark:focus-visible:ring-green-500/40",
+        warning:
+          "border-transparent bg-yellow-500 text-white [a&]:hover:bg-yellow-600 focus-visible:ring-yellow-500/20 dark:focus-visible:ring-yellow-500/40",
       },
     },
     defaultVariants: {
@@ -34,10 +37,10 @@ function Badge({
   const Comp = asChild ? Slot : "span"
 
   return (
-    (<Comp
+    <Comp
       data-slot="badge"
       className={cn(badgeVariants({ variant }), className)}
-      {...props} />)
+      {...props} />
   );
 }
 

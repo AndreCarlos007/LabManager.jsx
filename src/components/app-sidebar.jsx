@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { deleteCookie } from "@/lib/cookies"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { getFuncaoLabel } from "@/lib/constants"
 
 import {
@@ -71,6 +71,7 @@ const items = [
 
 export function AppSidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const [abrirDialogo, setDialogo] = useState(false)
   const { userProfile, loading, error } = useUserProfile()
 
@@ -98,19 +99,26 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-xs font-medium text-gray-600 px-3">Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="w-full hover:bg-gray-50">
-                    <a
-                      href={item.url}
-                      className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:text-gray-900"
-                    >
-                      <item.icon className="w-4 h-4 shrink-0" />
-                      <span className="truncate">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = pathname === item.url
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="w-full">
+                      <a
+                        href={item.url}
+                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+                          isActive
+                            ? "bg-gray-100 text-gray-900 font-medium"
+                            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                        }`}
+                      >
+                        <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-gray-900" : "text-gray-500"}`} />
+                        <span className="truncate">{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
